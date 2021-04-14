@@ -45,12 +45,13 @@ func main() {
 		return
 	}
 	discord.AddHandler(handle)
-	discord.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsDirectMessages
+	discord.Identify.Intents = discordgo.IntentsAll
 
 
 	err = discord.Open() 
 	if err != nil {
 		fmt.Println("fatal error : couldn't open connection")
+		fmt.Println(err)
 		return
 	}
 	fmt.Println("bot is now running");
@@ -241,10 +242,12 @@ func handle(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return // we don't want to answer ourself
 	}
 	if m.Content == "!dice clear" {
-		perms, err := s.UserChannelPermissions(m.Author.ID, m.ChannelID)
+		perms, err := s.State.UserChannelPermissions(m.Author.ID, m.ChannelID)
 		if err != nil {
+			fmt.Println(err)
 			return
 		}
+		fmt.Println(perms)
 		if perms & discordgo.PermissionManageMessages == discordgo.PermissionManageMessages {
 			id := m.ChannelID	
 			guild := m.GuildID
