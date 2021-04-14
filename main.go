@@ -72,7 +72,7 @@ type Token struct {
 
 
 func isOperator(r rune) bool {
-	if r == 'd' || r == 'x' || r == 'k' || r == 'K' || r == 's' {
+	if r == 'd' || r == 'x' || r == 'k' || r == 'K' || r == 's' || r == 'r' {
 		return true
 	}
 	return false
@@ -279,6 +279,9 @@ the following operators are available :
 	- ndm rolls n m-sized dices and put the results in an array
 	- nxm repeats n times m and put everything in a vertical array
 	- nrm takes a random integer between n and m, both included
+	- ns  sums the elements of the array n
+	- nKm keeps only the m highest elements of n
+	- nkm keeps only the m lowest elements of n
 !dice followed by a command outputs the result of this command.
 there also some specific commands :
 !dice help		: displays this help
