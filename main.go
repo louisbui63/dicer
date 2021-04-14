@@ -241,7 +241,11 @@ func handle(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return // we don't want to answer ourself
 	}
 	if m.Content == "!dice clear" {
-		if m.Author.Username == "louisbui63" {
+		perms, err := s.UserChannelPermissions(m.Author.ID, m.ChannelID)
+		if err != nil {
+			return
+		}
+		if perms & discordgo.PermissionManageMessages == discordgo.PermissionManageMessages {
 			id := m.ChannelID	
 			guild := m.GuildID
 			channels, err := s.GuildChannels(guild)
@@ -262,18 +266,20 @@ func handle(s *discordgo.Session, m *discordgo.MessageCreate) {
 					break
 				}
 			}
+		} else {
+			s.ChannelMessageSend(m.ChannelID, "insuficient permissions")
 		}
 
 	} else if m.Content == "!dice help" || m.Content == "!dicer help" {
 		s.ChannelMessageSend(m.ChannelID, `Dicer is a dice roller bot designed for tabletop rpg. It is based on an innovative representation of rolls as mathematical expressions, allowing endless possibilities, end thus making it suitable no matter the rules you are using.
-	the following operators are available :
-		- ndm rolls n m-sized dices and put the results in an array
-		- nxm repeats n times m and put everything in a vertical array
-		- nrm takes a random integer between n and m, both included
-	!dice followed by a command outputs the result of this command.
-	there also some specific commands :
-	!dice help		: displays this help
-	!dice clear		: clears the channel`)
+the following operators are available :
+	- ndm rolls n m-sized dices and put the results in an array
+	- nxm repeats n times m and put everything in a vertical array
+	- nrm takes a random integer between n and m, both included
+!dice followed by a command outputs the result of this command.
+there also some specific commands :
+!dice help		: displays this help
+!dice clear		: clears the channel`)
 
 	} else if strings.HasPrefix(m.Content, "!dice ") {
 		expr := m.Content[6:]
@@ -361,15 +367,6 @@ func handle(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		for i:=0; i<len(t);i++{
-			/*for j:=0; j<len(t[i]);j++{
-				_, err := strconv.Atoi(t[i][j])
-				if err != nil {
-					s := strings.Split(t[i][j], "r")
-					s0, _ := strconv.Atoi(s[0])
-					s1, _ := strconv.Atoi(s[1])
-					t[i][j] = strconv.Itoa(rand.Intn(s1-s0+1)+s0)
-				}
-			}*/
 			mess := strings.Trim(strings.Replace(fmt.Sprint(t[i]), " ", ",", -1), "[]")
 			s.ChannelMessageSend(m.ChannelID, mess)
 		}
@@ -377,106 +374,3 @@ func handle(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	}
 }
-
-
-/*func handle(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == s.State.User.ID {
-		return // we don't want to answer ourself
-	}
-	if m.Content == "!dice 1dSATAN" {
-		s.ChannelMessageSend(m.ChannelID, "666")
-	} else if m.Content == "!dice 1dCALLTHEPOLICE" {
-		s.ChannelMessageSend(m.ChannelID, "911")
-	} else if m.Content == "!dice 1dTHEANSWERTOLIFEANDEVERYTHING" {
-		s.ChannelMessageSend(m.ChannelID, "42")
-	} else if m.Content == "!dice 1dALEXIS" {
-		s.ChannelMessageSend(m.ChannelID, "17 (seulement)")
-	} else if m.Content == "!dice 1dMAXENCER" {
-		s.ChannelMessageSend(m.ChannelID, "1,60m")
-	} else if m.Content == "!dice clear" {
-		if m.Author.Username == "louisbui63" {
-			id := m.ChannelID	
-			guild := m.GuildID
-			channels, err := s.GuildChannels(guild)
-			if err != nil {
-				fmt.Println("WHAAAAT!!!!")
-			}
-			for _, c := range channels {
-				if c.ID == id {
-					ms, err := s.ChannelMessages(id, -1, "", "", "")
-					if err != nil {
-						continue
-					}
-					mss := []string{}
-					for _, i := range ms {
-						mss = append(mss, i.ID)
-					}
-					s.ChannelMessagesBulkDelete(id, mss)
-					break
-				}
-			}
-		}
-	} else if strings.HasPrefix(m.Content, "!dice ") {
-		command := m.Content[6:]
-		b := strings.Split(command, "x")
-		nb := 1
-		if len(b) == 2 {
-			nb1, err := strconv.Atoi(b[0])
-			if err != nil {
-				s.ChannelMessageSend(m.ChannelID, "Malformed request")
-				return
-			}
-			nb = nb1
-			command = b[1]
-		}
-		b = strings.Split(command, "]+")
-		tadder := 0
-		if len(b) == 2 {
-			tadder1, err := strconv.Atoi(b[1])
-			if err != nil {
-				s.ChannelMessageSend(m.ChannelID, "Malformed request")
-				return
-			}
-			tadder = tadder1
-			command = b[0]
-		}
-		b = strings.Split(command, "+")
-		adder := 0
-		if len(b) == 2 {
-			adder1, err := strconv.Atoi(b[1])
-			if err != nil {
-				s.ChannelMessageSend(m.ChannelID, "Malformed request")
-				return
-			}
-			adder = adder1
-			command = b[0]
-		}
-		for j := 0; j<nb; j++ {
-			a := strings.Split(command, "d")
-			a0, err := strconv.Atoi(a[0])
-			if err != nil || a0 < 0 || a0 > 20 {
-				s.ChannelMessageSend(m.ChannelID, "Malformed request")
-				return
-			}
-			a1, err := strconv.Atoi(a[1])
-			if err != nil || a1 <= 0 || a1 > 1000 {
-				s.ChannelMessageSend(m.ChannelID, "Malformed request")
-				return
-			}
-			list := []int{}
-			for i := 0; i < a0; i++ {
-				list = append(list, rand.Intn(a1)+1+adder)
-			}
-			tot := 0
-			for i := 0; i< len(list); i++ {
-				tot += list[i]
-			}
-			mess := strings.Trim(strings.Replace(fmt.Sprint(list), " ", ",", -1), "[]")
-			mess += (" => " + fmt.Sprint(tot))
-			if tadder != 0 {
-				mess += " => " + fmt.Sprint(tot+tadder)
-			}
-			s.ChannelMessageSend(m.ChannelID, mess)
-		}
-	}
-}*/
